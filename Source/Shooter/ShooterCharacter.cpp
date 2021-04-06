@@ -11,7 +11,9 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
+#include "Engine/World.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
+#include <Runtime/Engine/Public/DrawDebugHelpers.h>
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -122,8 +124,6 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	// Bind fire event
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AShooterCharacter::OnFire);
 
-	PlayerInputComponent->BindAction("Spawn", IE_Pressed, this, &AShooterCharacter::SpawnEnemy);
-
 	// Enable touchscreen input
 	EnableTouchscreenMovement(PlayerInputComponent);
 
@@ -142,15 +142,6 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AShooterCharacter::LookUpAtRate);
 }
 
-void AShooterCharacter::SpawnEnemy() {
-	FTransform SpawnTransform;
-	SpawnTransform.TransformPosition(FVector(-210, 20, 170));
-
-	FActorSpawnParameters spawnParameters;
-
-	GetWorld()->SpawnActor<AEnemy>(EnemyBP, SpawnTransform, spawnParameters);
-}
-
 void AShooterCharacter::OnFire()
 {
 	// try and fire a projectile
@@ -167,16 +158,22 @@ void AShooterCharacter::OnFire()
 			}
 			else
 			{
-				const FRotator SpawnRotation = GetControlRotation();
-				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+				FRotator rotation = GetControlRotation();
+				FVector gunOffset(0, 0, 25);
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PS_GunShot, FP_MuzzleLocation->GetComponentLocation() + gunOffset + GetActorForwardVector(), rotation, true);
 
-				//Set Spawn Collision Handling Override
-				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+				FHitResult hitResult;
+				FCollisionQueryParams Params;
+				Params.AddIgnoredActor(this);
 
-				// spawn the projectile at the muzzle
-				World->SpawnActor<AShooterProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				FVector start = FP_MuzzleLocation->GetComponentLocation() + gunOffset + GetActorForwardVector();
+				FVector end = start + 5000.0 * FirstPersonCameraComponent->GetForwardVector();
+
+				DrawDebugLine(GetWorld(), start, end, FColor(255, 0, 0), false, 2.f, 0, 5.0);
+
+				if (GetWorld()->LineTraceSingleByChannel(hitResult, start, end, ECollisionChannel::ECC_PhysicsBody, Params)) {
+					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PS_GunImpact, hitResult.ImpactPoint, rotation, true);
+				}
 			}
 		}
 	}

@@ -37,6 +37,8 @@ void AShooterProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 	// Only add impulse and destroy projectile if we hit a physics
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsA(AEnemy::StaticClass()))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Hit enemy"));
+		
 		if (Cast<AEnemy>(OtherActor)->takeDamage(1)) {
 			OtherActor->Destroy();
 		}
