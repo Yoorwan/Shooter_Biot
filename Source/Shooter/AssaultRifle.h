@@ -4,17 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Weapon.generated.h"
+#include "AssaultRifle.generated.h"
 
 /**
  * 
  */
-UCLASS(Abstract, Blueprintable)
-class SHOOTER_API UWeapon : public UActorComponent
+class UWeapon;
+UCLASS()
+class SHOOTER_API UAssaultRifle : public UWeapon
 {
 	GENERATED_BODY()
 public:
-	UWeapon();
-	
-	virtual void Shoot() PURE_VIRTUAL(UWeapon::Shoot);
+
+	void Shoot() override;
 };

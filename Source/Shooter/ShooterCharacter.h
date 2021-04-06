@@ -92,7 +92,7 @@ public:
 	uint8 bUsingMotionControllers : 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	TSubclassOf<class AEnemy> EnemyBP;
+	TSubclassOf<class UWeapon> currentWeapon;
 
 protected:
 	
