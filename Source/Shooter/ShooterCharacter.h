@@ -13,7 +13,7 @@ class UCameraComponent;
 class UMotionControllerComponent;
 class UAnimMontage;
 class USoundBase;
-class Weapon;
+class UWeapon;
 
 UCLASS(config=Game)
 class AShooterCharacter : public ACharacter
@@ -55,6 +55,9 @@ class AShooterCharacter : public ACharacter
 public:
 	AShooterCharacter();
 
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
 protected:
 	virtual void BeginPlay();
 
@@ -92,15 +95,24 @@ public:
 	uint8 bUsingMotionControllers : 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	TSubclassOf<class UWeapon> currentWeapon;
+	TSubclassOf<UWeapon> currentWeapon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	bool isFiring;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	bool hasFired;
 
 protected:
-	
-	
-	void SpawnEnemy();
+
+	/** Fires. */
+	void Shoot();
 
 	/** Fires a projectile. */
 	void OnFire();
+
+	/** Stops shooting */
+	void StopFire();
 
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();
@@ -154,8 +166,5 @@ public:
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
-private:
-	Weapon* currentWeapon;
 };
 

@@ -2,6 +2,9 @@
 
 #include "ShooterCharacter.h"
 #include "Enemy.h"
+#include "Weapon.h"
+#include "Pistol.h"
+#include "AssaultRifle.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -108,6 +111,20 @@ void AShooterCharacter::BeginPlay()
 
 }
 
+void AShooterCharacter::Tick(float DeltaTime) {
+	if (isFiring) {
+		if (currentWeapon->GetDefaultObject()->IsA(UAssaultRifle::StaticClass())) {
+			Shoot();
+		}
+		else if (currentWeapon->GetDefaultObject()->IsA(UPistol::StaticClass())) {
+			if (!hasFired) {
+				Shoot();
+			}
+		}
+		hasFired = true;
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -122,6 +139,7 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 
 	// Bind fire event
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AShooterCharacter::OnFire);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AShooterCharacter::StopFire);
 
 	// Enable touchscreen input
 	EnableTouchscreenMovement(PlayerInputComponent);
@@ -141,53 +159,51 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AShooterCharacter::LookUpAtRate);
 }
 
-void AShooterCharacter::OnFire()
-{
-	// try and fire a projectile
+void AShooterCharacter::Shoot() {
 	UWorld* const World = GetWorld();
-	if (World != nullptr) {		
-		FRotator rotation = GetControlRotation();
-		FVector gunOffset(0, 0, 25);
-		UGameplayStatics::SpawnEmitterAtLocation(World, PS_GunShot, FP_MuzzleLocation->GetComponentLocation() + gunOffset + GetActorForwardVector(), rotation, true);
+	if (World != nullptr) {
+		if (currentWeapon->GetDefaultObject<UWeapon>()->lastShot + currentWeapon->GetDefaultObject<UWeapon>()->rateOfFire < GetGameTimeSinceCreation()) {
+			
+			currentWeapon->GetDefaultObject<UWeapon>()->lastShot = GetGameTimeSinceCreation();
+			
+			FRotator rotation = GetControlRotation();
+			FVector gunOffset(0, 0, 25);
+			UGameplayStatics::SpawnEmitterAtLocation(World, PS_GunShot, FP_MuzzleLocation->GetComponentLocation() + gunOffset + GetActorForwardVector(), rotation, true);
 
-		FHitResult hitResult;
-		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(this);
+			FHitResult hitResult;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(this);
 
-		FVector start = FirstPersonCameraComponent->GetComponentLocation() + GetActorForwardVector();
-		FVector end = start + 5000.0 * FirstPersonCameraComponent->GetForwardVector();
+			FVector start = FirstPersonCameraComponent->GetComponentLocation() + GetActorForwardVector();
+			FVector end = start + 5000.0 * FirstPersonCameraComponent->GetForwardVector();
 
-		if (GetWorld()->LineTraceSingleByChannel(hitResult, start, end, ECollisionChannel::ECC_PhysicsBody, Params)) {
-			UGameplayStatics::SpawnEmitterAtLocation(World, PS_GunImpact, hitResult.ImpactPoint, rotation, true);
-			UE_LOG(LogTemp, Warning, TEXT("Hit : %s"), *hitResult.GetActor()->GetName());
+			if (GetWorld()->LineTraceSingleByChannel(hitResult, start, end, ECollisionChannel::ECC_PhysicsBody, Params)) {
+				UGameplayStatics::SpawnEmitterAtLocation(World, PS_GunImpact, hitResult.ImpactPoint, rotation, true);
+				UE_LOG(LogTemp, Warning, TEXT("Hit : %s"), *hitResult.GetActor()->GetName());
 
-			if (hitResult.GetActor()->IsA(AEnemy::StaticClass())) {
-				if (Cast<AEnemy>(hitResult.GetActor())) {
-					if (Cast<AEnemy>(hitResult.GetActor())->takeDamage(1)) {
-						UE_LOG(LogTemp, Warning, TEXT("Ded"));
-						hitResult.GetActor()->Destroy();
+				if (hitResult.GetActor()->IsA(AEnemy::StaticClass())) {
+					if (Cast<AEnemy>(hitResult.GetActor())) {
+						if (Cast<AEnemy>(hitResult.GetActor())->takeDamage(currentWeapon->GetDefaultObject<UWeapon>()->damagePerBullet)) {
+							UE_LOG(LogTemp, Warning, TEXT("Ded"));
+							hitResult.GetActor()->Destroy();
+						}
 					}
 				}
 			}
 		}
+		
 	}
+}
 
-	// try and play the sound if specified
-	if (FireSound != nullptr)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-	}
+void AShooterCharacter::OnFire()
+{
+	isFiring = true;
+}
 
-	// try and play a firing animation if specified
-	if (FireAnimation != nullptr)
-	{
-		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
-		if (AnimInstance != nullptr)
-		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
-		}
-	}
+void AShooterCharacter::StopFire()
+{
+	hasFired = false;
+	isFiring = false;
 }
 
 void AShooterCharacter::OnResetVR()
