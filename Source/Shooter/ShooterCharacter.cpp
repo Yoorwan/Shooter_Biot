@@ -1,7 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ShooterCharacter.h"
-#include "ShooterProjectile.h"
 #include "Enemy.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -145,34 +144,29 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 void AShooterCharacter::OnFire()
 {
 	// try and fire a projectile
-	if (ProjectileClass != nullptr)
-	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr)
-		{
-			if (bUsingMotionControllers)
-			{
-				const FRotator SpawnRotation = VR_MuzzleLocation->GetComponentRotation();
-				const FVector SpawnLocation = VR_MuzzleLocation->GetComponentLocation();
-				World->SpawnActor<AShooterProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
-			}
-			else
-			{
-				FRotator rotation = GetControlRotation();
-				FVector gunOffset(0, 0, 25);
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PS_GunShot, FP_MuzzleLocation->GetComponentLocation() + gunOffset + GetActorForwardVector(), rotation, true);
+	UWorld* const World = GetWorld();
+	if (World != nullptr) {		
+		FRotator rotation = GetControlRotation();
+		FVector gunOffset(0, 0, 25);
+		UGameplayStatics::SpawnEmitterAtLocation(World, PS_GunShot, FP_MuzzleLocation->GetComponentLocation() + gunOffset + GetActorForwardVector(), rotation, true);
 
-				FHitResult hitResult;
-				FCollisionQueryParams Params;
-				Params.AddIgnoredActor(this);
+		FHitResult hitResult;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
 
-				FVector start = FP_MuzzleLocation->GetComponentLocation() + gunOffset + GetActorForwardVector();
-				FVector end = start + 5000.0 * FirstPersonCameraComponent->GetForwardVector();
+		FVector start = FirstPersonCameraComponent->GetComponentLocation() + GetActorForwardVector();
+		FVector end = start + 5000.0 * FirstPersonCameraComponent->GetForwardVector();
 
-				DrawDebugLine(GetWorld(), start, end, FColor(255, 0, 0), false, 2.f, 0, 5.0);
+		if (GetWorld()->LineTraceSingleByChannel(hitResult, start, end, ECollisionChannel::ECC_PhysicsBody, Params)) {
+			UGameplayStatics::SpawnEmitterAtLocation(World, PS_GunImpact, hitResult.ImpactPoint, rotation, true);
+			UE_LOG(LogTemp, Warning, TEXT("Hit : %s"), *hitResult.GetActor()->GetName());
 
-				if (GetWorld()->LineTraceSingleByChannel(hitResult, start, end, ECollisionChannel::ECC_PhysicsBody, Params)) {
-					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PS_GunImpact, hitResult.ImpactPoint, rotation, true);
+			if (hitResult.GetActor()->IsA(AEnemy::StaticClass())) {
+				if (Cast<AEnemy>(hitResult.GetActor())) {
+					if (Cast<AEnemy>(hitResult.GetActor())->takeDamage(1)) {
+						UE_LOG(LogTemp, Warning, TEXT("Ded"));
+						hitResult.GetActor()->Destroy();
+					}
 				}
 			}
 		}

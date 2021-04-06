@@ -13,6 +13,7 @@ class UCameraComponent;
 class UMotionControllerComponent;
 class UAnimMontage;
 class USoundBase;
+class Weapon;
 
 UCLASS(config=Game)
 class AShooterCharacter : public ACharacter
@@ -77,10 +78,6 @@ public:
 	/** Gun shot emitter */
 	UPROPERTY(EditAnywhere, Category = Gameplay)
 	UParticleSystem* PS_GunImpact;
-
-	/** Projectile class to spawn */
-	UPROPERTY(EditDefaultsOnly, Category=Projectile)
-	TSubclassOf<class AShooterProjectile> ProjectileClass;
 
 	/** Sound to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
@@ -158,5 +155,7 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+private:
+	Weapon* currentWeapon;
 };
 

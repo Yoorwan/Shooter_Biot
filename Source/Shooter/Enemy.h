@@ -16,11 +16,16 @@ public:
 	AEnemy();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		int hp = 5;
+	int hp = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	AActor* targetActor;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	FVector target;
 
 public:	
 	// Called every frame

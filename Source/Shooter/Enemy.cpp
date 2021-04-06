@@ -2,6 +2,7 @@
 
 
 #include "Enemy.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -21,10 +22,17 @@ void AEnemy::BeginPlay()
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	float directionX = targetActor->GetActorLocation().X - GetActorLocation().X;
+	float directionY = targetActor->GetActorLocation().Y - GetActorLocation().Y;
+	FVector direction(directionX, directionY, 0);
+	direction.Normalize();
+
+	SetActorLocation(GetActorLocation() + direction * 50 * DeltaTime);
 }
 
 bool AEnemy::takeDamage(int value) {
 	hp -= value;
-	return hp == 0;
+	return hp <= 0;
 }
 
