@@ -7,6 +7,7 @@ UGunWidget::UGunWidget(const FObjectInitializer& ObjectInitializer) : Super(Obje
 void UGunWidget::NativeConstruct() {
 	Super::NativeConstruct();
 	TXTReloading->SetText(FText::FromString("Reloading..."));
+	TXTReloading->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UGunWidget::UpdateMagazineWidget(int32 bulletsAmount, int32 capacity) {
