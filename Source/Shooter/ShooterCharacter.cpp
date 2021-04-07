@@ -6,6 +6,8 @@
 #include "Pistol.h"
 #include "Containers/Array.h"
 #include "AssaultRifle.h"
+#include "MyHUD.h"
+#include "Engine/EngineTypes.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -110,26 +112,40 @@ void AShooterCharacter::BeginPlay()
 		Mesh1P->SetHiddenInGame(false, true);
 	}
 	
-	weaponsList.Add(GetWorld()->SpawnActor<AAssaultRifle>(AAssaultRifle::StaticClass()));
-	weaponsList.Add(GetWorld()->SpawnActor<APistol>(APistol::StaticClass()));
+	weaponsList.Emplace(GetWorld()->SpawnActor<AAssaultRifle>(assaultRifleWeapon, FVector(0,0,0), FRotator(0,0,0)));
+	weaponsList.Emplace(GetWorld()->SpawnActor<APistol>(pistolWeapon, FVector(0,0,0), FRotator(0, 0, 0)));
+	
+	MyHUD = Cast<AMyHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+	UpdateHUD();
 }
 
 void AShooterCharacter::Tick(float DeltaTime) {
-	if (isFiring) {
-		switch (currentWeapon) {
-		case 0:
-			Shoot();
-			break;
-		case 1:
-			if (!hasFired) {
+	if (isFiring && !isReloading) {
+		if (weaponsList[currentWeapon]->currentMagazineCapacity > 0) {
+			switch (currentWeapon) {
+			case 0:
 				Shoot();
+				break;
+			case 1:
+				if (!hasFired) {
+					Shoot();
+				}
+				break;
+			default:
+				Shoot();
+				break;
 			}
-			break;
-		default:
-			Shoot();
-			break;
+			hasFired = true;
 		}
-		hasFired = true;
+		else {
+			Reload();
+		}
+	}
+}
+
+void AShooterCharacter::UpdateHUD() {
+	if (MyHUD) {
+		MyHUD->UpdateMagazineWidget(weaponsList[currentWeapon]->currentMagazineCapacity, weaponsList[currentWeapon]->magazineCapacity);
 	}
 }
 
@@ -148,6 +164,9 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	// Bind fire event
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AShooterCharacter::OnFire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AShooterCharacter::StopFire);
+
+	// Bind reload event
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AShooterCharacter::Reload);
 
 	PlayerInputComponent->BindAction("SwitchWeapon1", IE_Pressed, this, &AShooterCharacter::SwitchToPistol);
 	PlayerInputComponent->BindAction("SwitchWeapon2", IE_Pressed, this, &AShooterCharacter::SwitchToAR);
@@ -199,6 +218,8 @@ void AShooterCharacter::Shoot() {
 					}
 				}
 			}
+			--weaponsList[currentWeapon]->currentMagazineCapacity;
+			UpdateHUD();
 		}
 		
 	}
@@ -206,12 +227,44 @@ void AShooterCharacter::Shoot() {
 
 void AShooterCharacter::SwitchToPistol()
 {
-	currentWeapon = 1;
+	if (!isReloading) {
+		currentWeapon = 1;
+		UpdateHUD();
+	}
+	
 }
 
 void AShooterCharacter::SwitchToAR()
 {
-	currentWeapon = 0;
+	if (!isReloading) {
+		currentWeapon = 0;
+		UpdateHUD();
+	}	
+}
+
+void AShooterCharacter::Reload()
+{
+	if (!isReloading) {
+		isReloading = true;
+
+		if (MyHUD) {
+			MyHUD->toggleReloading();
+		}
+
+		FTimerHandle UnusedHandle;
+		GetWorldTimerManager().SetTimer(
+			UnusedHandle, this, &AShooterCharacter::OnReload, weaponsList[currentWeapon]->reloadTime, false);
+	}	
+}
+
+void AShooterCharacter::OnReload()
+{
+	weaponsList[currentWeapon]->currentMagazineCapacity = weaponsList[currentWeapon]->magazineCapacity;
+	UpdateHUD();
+	if (MyHUD) {
+		MyHUD->toggleReloading();
+	}
+	isReloading = false;
 }
 
 void AShooterCharacter::OnFire()

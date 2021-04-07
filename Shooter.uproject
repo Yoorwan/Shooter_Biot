@@ -11,7 +11,8 @@
 			"AdditionalDependencies": [
 				"Core",
 				"Engine",
-				"Niagara"
+				"Niagara",
+				"UMG"
 			]
 		}
 	]

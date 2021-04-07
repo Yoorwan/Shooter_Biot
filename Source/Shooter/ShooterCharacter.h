@@ -14,6 +14,7 @@ class UMotionControllerComponent;
 class UAnimMontage;
 class USoundBase;
 class AWeapon;
+class AMyHUD;
 
 UCLASS(config=Game)
 class SHOOTER_API AShooterCharacter : public ACharacter
@@ -104,20 +105,33 @@ public:
 	bool isFiring;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gameplay)
+	bool isReloading;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gameplay)
 	bool hasFired;
+
+	AMyHUD* MyHUD;
 
 protected:
 
-	/** Switch weapon to pistol. */
+	void UpdateHUD();
+
+	/** Switch weapon to pistol */
 	void SwitchToPistol();
 
-	/** Switch weapon to assault rifle. */
+	/** Switch weapon to assault rifle */
 	void SwitchToAR();
 
-	/** Fires. */
+	/** Fire */
 	void Shoot();
 
-	/** Fires a projectile. */
+	/** Start reaload */
+	void OnReload();
+
+	/** Reaload */
+	void Reload();
+
+	/** Fires a projectile */
 	void OnFire();
 
 	/** Stops shooting */
@@ -177,6 +191,6 @@ public:
 
 private:
 	TArray<AWeapon*> weaponsList;
-	int currentWeapon = 0;
+	int currentWeapon = 1;
 };
 
