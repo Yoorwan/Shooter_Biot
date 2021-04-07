@@ -13,10 +13,10 @@ class UCameraComponent;
 class UMotionControllerComponent;
 class UAnimMontage;
 class USoundBase;
-class UWeapon;
+class AWeapon;
 
 UCLASS(config=Game)
-class AShooterCharacter : public ACharacter
+class SHOOTER_API AShooterCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -27,10 +27,6 @@ class AShooterCharacter : public ACharacter
 	/** Gun mesh: 1st person view (seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 	USkeletalMeshComponent* FP_Gun;
-
-	/** Location on gun mesh where projectiles should spawn. */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-	USceneComponent* FP_MuzzleLocation;
 
 	/** Gun mesh: VR view (attached to the VR controller directly, no arm, just the actual gun) */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
@@ -62,6 +58,10 @@ protected:
 	virtual void BeginPlay();
 
 public:
+	/** Location on gun mesh where projectiles should spawn. */
+	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+	USceneComponent* FP_MuzzleLocation;
+
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseTurnRate;
@@ -95,15 +95,24 @@ public:
 	uint8 bUsingMotionControllers : 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	TSubclassOf<UWeapon> currentWeapon;
-
+	TSubclassOf<AWeapon> assaultRifleWeapon;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	TSubclassOf<AWeapon> pistolWeapon;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gameplay)
 	bool isFiring;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gameplay)
 	bool hasFired;
 
 protected:
+
+	/** Switch weapon to pistol. */
+	void SwitchToPistol();
+
+	/** Switch weapon to assault rifle. */
+	void SwitchToAR();
 
 	/** Fires. */
 	void Shoot();
@@ -145,7 +154,6 @@ protected:
 	};
 	void BeginTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
 	void EndTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
-	void TouchUpdate(const ETouchIndex::Type FingerIndex, const FVector Location);
 	TouchData	TouchItem;
 	
 protected:
@@ -166,5 +174,9 @@ public:
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
+private:
+	TArray<AWeapon*> weaponsList;
+	int currentWeapon = 0;
 };
 

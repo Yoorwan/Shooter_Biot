@@ -1,5 +1,5 @@
 #include "Weapon.h"
 
-UWeapon::UWeapon()
-{
+AWeapon::AWeapon() {
+
 }

@@ -5,7 +5,7 @@
 #include "Pistol.generated.h"
 
 UCLASS()
-class SHOOTER_API UPistol : public UWeapon
+class SHOOTER_API APistol : public AWeapon
 {
 	GENERATED_BODY()
 	

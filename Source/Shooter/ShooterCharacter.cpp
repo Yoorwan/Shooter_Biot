@@ -4,6 +4,7 @@
 #include "Enemy.h"
 #include "Weapon.h"
 #include "Pistol.h"
+#include "Containers/Array.h"
 #include "AssaultRifle.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -108,18 +109,25 @@ void AShooterCharacter::BeginPlay()
 		VR_Gun->SetHiddenInGame(true, true);
 		Mesh1P->SetHiddenInGame(false, true);
 	}
-
+	
+	weaponsList.Add(GetWorld()->SpawnActor<AAssaultRifle>(AAssaultRifle::StaticClass()));
+	weaponsList.Add(GetWorld()->SpawnActor<APistol>(APistol::StaticClass()));
 }
 
 void AShooterCharacter::Tick(float DeltaTime) {
 	if (isFiring) {
-		if (currentWeapon->GetDefaultObject()->IsA(UAssaultRifle::StaticClass())) {
+		switch (currentWeapon) {
+		case 0:
 			Shoot();
-		}
-		else if (currentWeapon->GetDefaultObject()->IsA(UPistol::StaticClass())) {
+			break;
+		case 1:
 			if (!hasFired) {
 				Shoot();
 			}
+			break;
+		default:
+			Shoot();
+			break;
 		}
 		hasFired = true;
 	}
@@ -140,6 +148,9 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	// Bind fire event
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AShooterCharacter::OnFire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AShooterCharacter::StopFire);
+
+	PlayerInputComponent->BindAction("SwitchWeapon1", IE_Pressed, this, &AShooterCharacter::SwitchToPistol);
+	PlayerInputComponent->BindAction("SwitchWeapon2", IE_Pressed, this, &AShooterCharacter::SwitchToAR);
 
 	// Enable touchscreen input
 	EnableTouchscreenMovement(PlayerInputComponent);
@@ -162,9 +173,9 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 void AShooterCharacter::Shoot() {
 	UWorld* const World = GetWorld();
 	if (World != nullptr) {
-		if (currentWeapon->GetDefaultObject<UWeapon>()->lastShot + currentWeapon->GetDefaultObject<UWeapon>()->rateOfFire < GetGameTimeSinceCreation()) {
+		if (weaponsList[currentWeapon]->lastShot + weaponsList[currentWeapon]->rateOfFire < GetGameTimeSinceCreation()) {
 			
-			currentWeapon->GetDefaultObject<UWeapon>()->lastShot = GetGameTimeSinceCreation();
+			weaponsList[currentWeapon]->lastShot = GetGameTimeSinceCreation();
 			
 			FRotator rotation = GetControlRotation();
 			FVector gunOffset(0, 0, 25);
@@ -179,12 +190,10 @@ void AShooterCharacter::Shoot() {
 
 			if (GetWorld()->LineTraceSingleByChannel(hitResult, start, end, ECollisionChannel::ECC_PhysicsBody, Params)) {
 				UGameplayStatics::SpawnEmitterAtLocation(World, PS_GunImpact, hitResult.ImpactPoint, rotation, true);
-				UE_LOG(LogTemp, Warning, TEXT("Hit : %s"), *hitResult.GetActor()->GetName());
 
 				if (hitResult.GetActor()->IsA(AEnemy::StaticClass())) {
 					if (Cast<AEnemy>(hitResult.GetActor())) {
-						if (Cast<AEnemy>(hitResult.GetActor())->takeDamage(currentWeapon->GetDefaultObject<UWeapon>()->damagePerBullet)) {
-							UE_LOG(LogTemp, Warning, TEXT("Ded"));
+						if (Cast<AEnemy>(hitResult.GetActor())->takeDamage(weaponsList[currentWeapon]->damagePerBullet)) {
 							hitResult.GetActor()->Destroy();
 						}
 					}
@@ -193,6 +202,16 @@ void AShooterCharacter::Shoot() {
 		}
 		
 	}
+}
+
+void AShooterCharacter::SwitchToPistol()
+{
+	currentWeapon = 1;
+}
+
+void AShooterCharacter::SwitchToAR()
+{
+	currentWeapon = 0;
 }
 
 void AShooterCharacter::OnFire()

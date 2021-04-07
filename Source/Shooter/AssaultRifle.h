@@ -5,7 +5,7 @@
 #include "AssaultRifle.generated.h"
 
 UCLASS()
-class SHOOTER_API UAssaultRifle : public UWeapon
+class SHOOTER_API AAssaultRifle : public AWeapon
 {
 	GENERATED_BODY()
 

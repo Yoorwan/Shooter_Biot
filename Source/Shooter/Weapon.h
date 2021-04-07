@@ -4,10 +4,10 @@
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
-class UActorComponent;
+class AShooterCharacter;
 
 UCLASS(Abstract, Blueprintable)
-class SHOOTER_API UWeapon : public UActorComponent
+class SHOOTER_API AWeapon : public AActor
 {
 	GENERATED_BODY()
 
@@ -15,20 +15,24 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	float rateOfFire;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Gameplay)
 	float lastShot = 0;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	float magazineCapacity;	
+	float magazineCapacity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Gameplay)
+	float currentMagazineCapacity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	float reloadTime;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	float damagePerBullet;
+public:
 
 public:
-	UWeapon();
+	AWeapon();
 	
 	void Shoot();
 };
