@@ -58,6 +58,8 @@ public:
 protected:
 	virtual void BeginPlay();
 
+	virtual void ReceiveActorBeginOverlap(AActor* OtherActor);
+
 public:
 	/** Location on gun mesh where projectiles should spawn. */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
@@ -110,6 +112,11 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gameplay)
 	bool hasFired;
 
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gameplay)
+	int playerHealth;
+
+	int currentHealth;
+
 	AMyHUD* MyHUD;
 
 protected:
@@ -121,6 +128,12 @@ protected:
 
 	/** Switch weapon to assault rifle */
 	void SwitchToAR();
+
+	/** Switch weapon to previous weapon */
+	void PrevWeapon();
+
+	/** Switch weapon to next weapon */
+	void NextWeapon();
 
 	/** Fire */
 	void Shoot();
@@ -136,6 +149,9 @@ protected:
 
 	/** Stops shooting */
 	void StopFire();
+
+	/** Inflict damage to the player. Returns if he's dead */
+	bool takeDamage(int amount);
 
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();

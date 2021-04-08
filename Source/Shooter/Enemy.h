@@ -16,7 +16,7 @@ public:
 	AEnemy();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	int hp = 5;
+	int hp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	AActor* targetActor;

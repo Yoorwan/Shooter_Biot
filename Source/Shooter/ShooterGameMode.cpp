@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ShooterGameMode.h"
-#include "ShooterHUD.h"
+#include "MyHUD.h"
 #include "ShooterCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -13,5 +13,5 @@ AShooterGameMode::AShooterGameMode()
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
 
 	// use our custom HUD class
-	HUDClass = AShooterHUD::StaticClass();
+	HUDClass = AMyHUD::StaticClass();
 }

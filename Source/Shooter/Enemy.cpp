@@ -2,20 +2,21 @@
 
 
 #include "Enemy.h"
+#include "ShooterCharacter.h"
 #include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 AEnemy::AEnemy()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 // Called when the game starts or when spawned
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+	
 }
 
 // Called every frame
@@ -28,11 +29,10 @@ void AEnemy::Tick(float DeltaTime)
 	FVector direction(directionX, directionY, 0);
 	direction.Normalize();
 
-	SetActorLocation(GetActorLocation() + direction * 50 * DeltaTime);
+	SetActorLocation(GetActorLocation() + direction * 200 * DeltaTime);
 }
 
 bool AEnemy::takeDamage(int value) {
 	hp -= value;
 	return hp <= 0;
 }
-

@@ -171,6 +171,9 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAction("SwitchWeapon1", IE_Pressed, this, &AShooterCharacter::SwitchToPistol);
 	PlayerInputComponent->BindAction("SwitchWeapon2", IE_Pressed, this, &AShooterCharacter::SwitchToAR);
 
+	PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AShooterCharacter::PrevWeapon);
+	PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AShooterCharacter::NextWeapon);
+
 	// Enable touchscreen input
 	EnableTouchscreenMovement(PlayerInputComponent);
 
@@ -242,6 +245,30 @@ void AShooterCharacter::SwitchToAR()
 	}	
 }
 
+void AShooterCharacter::PrevWeapon() {
+	if (!isReloading) {
+		if (currentWeapon != 0) {
+			--currentWeapon;
+		}
+		else {
+			currentWeapon = weaponsList.Num() - 1;
+		}
+		UpdateHUD();
+	}
+}
+
+void AShooterCharacter::NextWeapon() {
+	if (!isReloading) {
+		if (currentWeapon != weaponsList.Num() - 1) {
+			++currentWeapon;
+		}
+		else {
+			currentWeapon = 0;
+		}
+		UpdateHUD();
+	}
+}
+
 void AShooterCharacter::Reload()
 {
 	if (!isReloading) {
@@ -254,7 +281,7 @@ void AShooterCharacter::Reload()
 		FTimerHandle UnusedHandle;
 		GetWorldTimerManager().SetTimer(
 			UnusedHandle, this, &AShooterCharacter::OnReload, weaponsList[currentWeapon]->reloadTime, false);
-	}	
+	}
 }
 
 void AShooterCharacter::OnReload()
@@ -276,6 +303,21 @@ void AShooterCharacter::StopFire()
 {
 	hasFired = false;
 	isFiring = false;
+}
+
+bool AShooterCharacter::takeDamage(int amount) {
+	currentHealth -= amount;
+	return currentHealth <= 0;
+}
+
+void AShooterCharacter::ReceiveActorBeginOverlap(AActor* OtherActor) {
+	Super::ReceiveActorBeginOverlap(OtherActor);
+	UE_LOG(LogTemp, Warning, TEXT("Hit"));
+	if (OtherActor->IsA(AEnemy::StaticClass())) {
+		if (takeDamage(1)) {
+			UE_LOG(LogTemp, Warning, TEXT("Dead"));
+		}
+	}
 }
 
 void AShooterCharacter::OnResetVR()
