@@ -19,7 +19,15 @@ public:
 	int hp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	int damage = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	AActor* targetActor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	float attackDelay;
+
+	float lastShot = 0;
 
 protected:
 	// Called when the game starts or when spawned
@@ -32,4 +40,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	bool takeDamage(int value);
+	bool CanAttack();
+	int GetDamage() { return damage; }
 };

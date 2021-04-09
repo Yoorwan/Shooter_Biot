@@ -58,8 +58,6 @@ public:
 protected:
 	virtual void BeginPlay();
 
-	virtual void ReceiveActorBeginOverlap(AActor* OtherActor);
-
 public:
 	/** Location on gun mesh where projectiles should spawn. */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
@@ -113,7 +111,7 @@ public:
 	bool hasFired;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gameplay)
-	int playerHealth;
+	int playerHealth = 50;
 
 	int currentHealth;
 

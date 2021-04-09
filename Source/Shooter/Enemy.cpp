@@ -36,3 +36,11 @@ bool AEnemy::takeDamage(int value) {
 	hp -= value;
 	return hp <= 0;
 }
+
+bool AEnemy::CanAttack() {
+	if (lastShot + attackDelay < GetGameTimeSinceCreation()) {
+		lastShot = GetGameTimeSinceCreation();
+		return true;
+	}
+	return false;
+}

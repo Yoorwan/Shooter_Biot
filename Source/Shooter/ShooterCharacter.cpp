@@ -8,6 +8,7 @@
 #include "AssaultRifle.h"
 #include "MyHUD.h"
 #include "Engine/EngineTypes.h"
+#include "GameFramework/Actor.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -112,6 +113,8 @@ void AShooterCharacter::BeginPlay()
 		Mesh1P->SetHiddenInGame(false, true);
 	}
 	
+	currentHealth = playerHealth;
+
 	weaponsList.Emplace(GetWorld()->SpawnActor<AAssaultRifle>(assaultRifleWeapon, FVector(0,0,0), FRotator(0,0,0)));
 	weaponsList.Emplace(GetWorld()->SpawnActor<APistol>(pistolWeapon, FVector(0,0,0), FRotator(0, 0, 0)));
 	
@@ -120,6 +123,23 @@ void AShooterCharacter::BeginPlay()
 }
 
 void AShooterCharacter::Tick(float DeltaTime) {
+
+	TArray<AActor*> overlappingActors;
+	GetOverlappingActors(overlappingActors, AEnemy::StaticClass());
+
+	if (overlappingActors.Num() > 0) {
+		for (AActor* enemyActor : overlappingActors)
+		{
+			AEnemy* enemy = Cast<AEnemy>(enemyActor);
+			if (enemy->CanAttack()) {
+				if (takeDamage(enemy->GetDamage())) {
+					UE_LOG(LogTemp, Warning, TEXT("Dead"));
+				}
+			}
+		}
+
+	}
+
 	if (isFiring && !isReloading) {
 		if (weaponsList[currentWeapon]->currentMagazineCapacity > 0) {
 			switch (currentWeapon) {
@@ -141,6 +161,7 @@ void AShooterCharacter::Tick(float DeltaTime) {
 			Reload();
 		}
 	}
+
 }
 
 void AShooterCharacter::UpdateHUD() {
@@ -308,16 +329,6 @@ void AShooterCharacter::StopFire()
 bool AShooterCharacter::takeDamage(int amount) {
 	currentHealth -= amount;
 	return currentHealth <= 0;
-}
-
-void AShooterCharacter::ReceiveActorBeginOverlap(AActor* OtherActor) {
-	Super::ReceiveActorBeginOverlap(OtherActor);
-	UE_LOG(LogTemp, Warning, TEXT("Hit"));
-	if (OtherActor->IsA(AEnemy::StaticClass())) {
-		if (takeDamage(1)) {
-			UE_LOG(LogTemp, Warning, TEXT("Dead"));
-		}
-	}
 }
 
 void AShooterCharacter::OnResetVR()
