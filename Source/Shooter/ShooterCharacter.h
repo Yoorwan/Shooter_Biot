@@ -27,7 +27,11 @@ class SHOOTER_API AShooterCharacter : public ACharacter
 
 	/** Gun mesh: 1st person view (seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-	USkeletalMeshComponent* FP_Gun;
+	UStaticMeshComponent* FP_Pistol;
+
+	/** Gun mesh: 1st person view (seen only by self) */
+	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+	UStaticMeshComponent* FP_Rifle;
 
 	/** Gun mesh: VR view (attached to the VR controller directly, no arm, just the actual gun) */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
@@ -142,11 +146,17 @@ protected:
 	/** Reaload */
 	void Reload();
 
+	/** Enqbles firing */
+	void StartFire();
+
 	/** Fires a projectile */
 	void OnFire();
 
 	/** Stops shooting */
 	void StopFire();
+
+	/** Chack player collisions with enemies */
+	void CheckPlayerCollisions();
 
 	/** Inflict damage to the player. Returns if he's dead */
 	bool takeDamage(int amount);
@@ -205,6 +215,6 @@ public:
 
 private:
 	TArray<AWeapon*> weaponsList;
-	int currentWeapon = 1;
+	int currentWeapon = 0;
 };
 

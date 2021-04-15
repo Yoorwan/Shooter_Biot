@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Enemy.h"
 #include "ShooterCharacter.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -24,8 +23,8 @@ void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	float directionX = targetActor->GetActorLocation().X - GetActorLocation().X;
-	float directionY = targetActor->GetActorLocation().Y - GetActorLocation().Y;
+	float directionX = Cast<AActor>(targetActor)->GetActorLocation().X - GetActorLocation().X;
+	float directionY = Cast<AActor>(targetActor)->GetActorLocation().Y - GetActorLocation().Y;
 	FVector direction(directionX, directionY, 0);
 	direction.Normalize();
 

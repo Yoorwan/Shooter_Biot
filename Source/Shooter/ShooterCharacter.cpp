@@ -12,6 +12,7 @@
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/InputSettings.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
@@ -51,15 +52,23 @@ AShooterCharacter::AShooterCharacter()
 	Mesh1P->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
 	// Create a gun mesh component
-	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
-	FP_Gun->SetOnlyOwnerSee(false);			// otherwise won't be visible in the multiplayer
-	FP_Gun->bCastDynamicShadow = false;
-	FP_Gun->CastShadow = false;
-	// FP_Gun->SetupAttachment(Mesh1P, TEXT("GripPoint"));
-	FP_Gun->SetupAttachment(RootComponent);
+	FP_Pistol = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FP_Pistol"));
+	FP_Pistol->SetOnlyOwnerSee(false);			// otherwise won't be visible in the multiplayer
+	FP_Pistol->bCastDynamicShadow = false;
+	FP_Pistol->CastShadow = false;
+	// FP_Pistol->SetupAttachment(Mesh1P, TEXT("GripPoint"));
+	FP_Pistol->SetupAttachment(RootComponent);
+
+	// Create a gun mesh component
+	FP_Rifle = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FP_Rifle"));
+	FP_Rifle->SetOnlyOwnerSee(false);			// otherwise won't be visible in the multiplayer
+	FP_Rifle->bCastDynamicShadow = false;
+	FP_Rifle->CastShadow = false;
+	// FP_Rifle->SetupAttachment(Mesh1P, TEXT("GripPoint"));
+	FP_Rifle->SetupAttachment(RootComponent);
 
 	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
-	FP_MuzzleLocation->SetupAttachment(FP_Gun);
+	FP_MuzzleLocation->SetupAttachment(RootComponent);
 	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
 
 	// Default offset from the character location for projectiles to spawn
@@ -99,7 +108,11 @@ void AShooterCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
-	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	FP_Pistol->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	FP_Rifle->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+
+	FP_Pistol->SetHiddenInGame(false, true);
+	FP_Rifle->SetHiddenInGame(true, true);
 
 	// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
 	if (bUsingMotionControllers)
@@ -115,8 +128,8 @@ void AShooterCharacter::BeginPlay()
 	
 	currentHealth = playerHealth;
 
+	weaponsList.Emplace(GetWorld()->SpawnActor<APistol>(pistolWeapon, FVector(0, 0, 0), FRotator(0, 0, 0)));
 	weaponsList.Emplace(GetWorld()->SpawnActor<AAssaultRifle>(assaultRifleWeapon, FVector(0,0,0), FRotator(0,0,0)));
-	weaponsList.Emplace(GetWorld()->SpawnActor<APistol>(pistolWeapon, FVector(0,0,0), FRotator(0, 0, 0)));
 	
 	MyHUD = Cast<AMyHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
 	UpdateHUD();
@@ -124,44 +137,8 @@ void AShooterCharacter::BeginPlay()
 
 void AShooterCharacter::Tick(float DeltaTime) {
 
-	TArray<AActor*> overlappingActors;
-	GetOverlappingActors(overlappingActors, AEnemy::StaticClass());
-
-	if (overlappingActors.Num() > 0) {
-		for (AActor* enemyActor : overlappingActors)
-		{
-			AEnemy* enemy = Cast<AEnemy>(enemyActor);
-			if (enemy->CanAttack()) {
-				if (takeDamage(enemy->GetDamage())) {
-					UE_LOG(LogTemp, Warning, TEXT("Dead"));
-				}
-			}
-		}
-
-	}
-
-	if (isFiring && !isReloading) {
-		if (weaponsList[currentWeapon]->currentMagazineCapacity > 0) {
-			switch (currentWeapon) {
-			case 0:
-				Shoot();
-				break;
-			case 1:
-				if (!hasFired) {
-					Shoot();
-				}
-				break;
-			default:
-				Shoot();
-				break;
-			}
-			hasFired = true;
-		}
-		else {
-			Reload();
-		}
-	}
-
+	CheckPlayerCollisions();
+	OnFire();
 }
 
 void AShooterCharacter::UpdateHUD() {
@@ -183,7 +160,7 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	// Bind fire event
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AShooterCharacter::OnFire);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AShooterCharacter::StartFire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AShooterCharacter::StopFire);
 
 	// Bind reload event
@@ -252,7 +229,9 @@ void AShooterCharacter::Shoot() {
 void AShooterCharacter::SwitchToPistol()
 {
 	if (!isReloading) {
-		currentWeapon = 1;
+		currentWeapon = 0;
+		FP_Rifle->SetHiddenInGame(true, true);
+		FP_Pistol->SetHiddenInGame(false, true);
 		UpdateHUD();
 	}
 	
@@ -261,7 +240,9 @@ void AShooterCharacter::SwitchToPistol()
 void AShooterCharacter::SwitchToAR()
 {
 	if (!isReloading) {
-		currentWeapon = 0;
+		currentWeapon = 1;
+		FP_Pistol->SetHiddenInGame(true, true);
+		FP_Rifle->SetHiddenInGame(false, true);
 		UpdateHUD();
 	}	
 }
@@ -315,15 +296,52 @@ void AShooterCharacter::OnReload()
 	isReloading = false;
 }
 
-void AShooterCharacter::OnFire()
+void AShooterCharacter::StartFire()
 {
 	isFiring = true;
+}
+
+void AShooterCharacter::OnFire()
+{
+	if (isFiring && !isReloading) {
+		if (weaponsList[currentWeapon]->currentMagazineCapacity > 0) {
+			if (weaponsList[currentWeapon]->isAuto) {
+				Shoot();
+			}
+			else {
+				if (!hasFired) {
+					Shoot();
+				}
+			}
+			hasFired = true;
+		}
+		else {
+			Reload();
+		}
+	}
 }
 
 void AShooterCharacter::StopFire()
 {
 	hasFired = false;
 	isFiring = false;
+}
+
+void AShooterCharacter::CheckPlayerCollisions() {
+	TArray<AActor*> overlappingActors;
+	GetOverlappingActors(overlappingActors, AEnemy::StaticClass());
+
+	if (overlappingActors.Num() > 0) {
+		for (AActor* enemyActor : overlappingActors)
+		{
+			AEnemy* enemy = Cast<AEnemy>(enemyActor);
+			if (enemy->CanAttack()) {
+				if (takeDamage(enemy->GetDamage())) {
+					UE_LOG(LogTemp, Warning, TEXT("Dead"));
+				}
+			}
+		}
+	}
 }
 
 bool AShooterCharacter::takeDamage(int amount) {

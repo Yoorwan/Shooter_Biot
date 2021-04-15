@@ -29,6 +29,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	float damagePerBullet;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	bool isAuto;
 public:
 
 public:
