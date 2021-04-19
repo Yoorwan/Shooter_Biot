@@ -53,7 +53,7 @@ AShooterCharacter::AShooterCharacter()
 	Mesh1P->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
 	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
-	FP_MuzzleLocation->SetupAttachment(RootComponent);
+	FP_MuzzleLocation->SetupAttachment(Mesh1P);
 	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
 
 	// Default offset from the character location for projectiles to spawn
@@ -94,8 +94,6 @@ void AShooterCharacter::BeginPlay()
 
 	FP_MuzzleLocation->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
 
-	wavesManager->LaunchNextWave();
-
 	// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
 	if (bUsingMotionControllers)
 	{
@@ -107,8 +105,6 @@ void AShooterCharacter::BeginPlay()
 		VR_Gun->SetHiddenInGame(true, true);
 		Mesh1P->SetHiddenInGame(false, true);
 	}
-	
-	currentHealth = playerHealth;
 
 	AWeapon* tempWeapon = GetWorld()->SpawnActor<APistol>(pistolWeapon, FVector(0, 0, 0), FRotator(0, 0, 0));
 	tempWeapon->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
@@ -127,6 +123,7 @@ void AShooterCharacter::BeginPlay()
 }
 
 void AShooterCharacter::Tick(float DeltaTime) {
+	Super::Tick(DeltaTime);
 
 	CheckPlayerCollisions();
 	OnFire();
@@ -190,7 +187,8 @@ void AShooterCharacter::Shoot() {
 			
 			FRotator rotation = GetControlRotation();
 			FVector gunOffset(0, 0, 25);
-			UGameplayStatics::SpawnEmitterAtLocation(World, PS_GunShot, FP_MuzzleLocation->GetComponentLocation() + gunOffset + GetActorForwardVector(), rotation, true);
+			UGameplayStatics::SpawnEmitterAtLocation(World, PS_GunShot, weaponsList[currentWeapon]->GetActorLocation() + weaponsList[currentWeapon]->GetActorForwardVector(), rotation, true);
+			UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 
 			FHitResult hitResult;
 			FCollisionQueryParams Params;
@@ -201,10 +199,11 @@ void AShooterCharacter::Shoot() {
 
 			if (GetWorld()->LineTraceSingleByChannel(hitResult, start, end, ECollisionChannel::ECC_PhysicsBody, Params)) {
 				UGameplayStatics::SpawnEmitterAtLocation(World, PS_GunImpact, hitResult.ImpactPoint, rotation, true);
-
+				
 				if (hitResult.GetActor()->IsA(AEnemy::StaticClass())) {
 					if (Cast<AEnemy>(hitResult.GetActor())) {
 						if (Cast<AEnemy>(hitResult.GetActor())->takeDamage(weaponsList[currentWeapon]->damagePerBullet)) {
+							wavesManager->DeleteEnemy(Cast<AEnemy>(hitResult.GetActor()));
 							hitResult.GetActor()->Destroy();
 						}
 					}
@@ -328,6 +327,9 @@ void AShooterCharacter::CheckPlayerCollisions() {
 			if (enemy->CanAttack()) {
 				UE_LOG(LogTemp, Warning, TEXT("Health, %d"), currentHealth / playerHealth);
 				if (takeDamage(enemy->GetDamage())) {
+					if (MyHUD) {
+						MyHUD->ToggleReloading();
+					}
 					UGameplayStatics::SetGamePaused(GetWorld(), true);
 				}
 			}

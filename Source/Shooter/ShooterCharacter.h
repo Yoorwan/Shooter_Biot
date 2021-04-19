@@ -99,16 +99,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	TSubclassOf<AWeapon> pistolWeapon;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gameplay)
 	bool isFiring;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gameplay)
 	bool isReloading;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gameplay)
 	bool hasFired;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gameplay)
 	int playerHealth = 50;
 
 	int currentHealth = 50;

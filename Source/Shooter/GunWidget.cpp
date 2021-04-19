@@ -27,5 +27,10 @@ void UGunWidget::ToggleReloading() {
 }
 
 void UGunWidget::UpdateHealthBar(int currentHealth, int maxHealth) {
-	PBHealthBar->SetPercent(currentHealth / maxHealth);
+	double value = (double)currentHealth / (double)maxHealth;
+	PBHealthBar->SetPercent(value);
+}
+
+void UGunWidget::DisplayDeathMessage() {
+	TXTDeathMessage->SetVisibility(ESlateVisibility::Visible);
 }

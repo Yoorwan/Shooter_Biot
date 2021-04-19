@@ -57,3 +57,9 @@ void AMyHUD::UpdateHealthBar(int currentHealth, int maxHealth) {
 		GunWidget->UpdateHealthBar(currentHealth, maxHealth);
 	}
 }
+
+void AMyHUD::DisplayDeathMessage() {
+	if (GunWidget) {
+		GunWidget->DisplayDeathMessage();
+	}
+}

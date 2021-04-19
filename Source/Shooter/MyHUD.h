@@ -34,6 +34,9 @@ public:
 	UFUNCTION()
 	void UpdateHealthBar(int currentHealth, int maxHealth);
 
+	UFUNCTION()
+	void DisplayDeathMessage();
+
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
 	TSubclassOf<UUserWidget> GunWidgetClass;
 	

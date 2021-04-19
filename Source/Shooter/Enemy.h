@@ -33,13 +33,16 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	FVector target;
-
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	bool takeDamage(int value);
 	bool CanAttack();
+	void SetTarget(AShooterCharacter* target);
 	int GetDamage() { return damage; }
+
+	void SetDamageScale(int value) { damage *= value; }
+	void SetHPScale(int value) { hp *= value; }
+	void SetSizeScale(int value) { SetActorScale3D(FVector(value)); }
 };

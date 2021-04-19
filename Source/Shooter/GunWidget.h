@@ -26,11 +26,16 @@ public:
 
 	void UpdateHealthBar(int currentHealth, int maxHealth);
 
+	void DisplayDeathMessage();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UTextBlock* TXTMagazine;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* TXTReloading;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* TXTDeathMessage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UProgressBar* PBHealthBar;

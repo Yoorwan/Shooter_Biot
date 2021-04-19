@@ -23,12 +23,15 @@ void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	float directionX = targetActor->GetActorLocation().X - GetActorLocation().X;
-	float directionY = targetActor->GetActorLocation().Y - GetActorLocation().Y;
-	FVector direction(directionX, directionY, 0);
-	direction.Normalize();
+	if (targetActor) {
+		float directionX = targetActor->GetActorLocation().X - GetActorLocation().X;
+		float directionY = targetActor->GetActorLocation().Y - GetActorLocation().Y;
+		FVector direction(directionX, directionY, 0);
+		direction.Normalize();
 
-	SetActorLocation(GetActorLocation() + direction * 200 * DeltaTime);
+		SetActorLocation(GetActorLocation() + direction * 200 * DeltaTime);
+	}
+	
 }
 
 bool AEnemy::takeDamage(int value) {
@@ -42,4 +45,8 @@ bool AEnemy::CanAttack() {
 		return true;
 	}
 	return false;
+}
+
+void AEnemy::SetTarget(AShooterCharacter* target) {
+	targetActor = target;
 }
