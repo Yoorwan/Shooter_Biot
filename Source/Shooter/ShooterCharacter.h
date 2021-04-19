@@ -15,6 +15,7 @@ class UAnimMontage;
 class USoundBase;
 class AWeapon;
 class AMyHUD;
+class AWavesManager;
 
 UCLASS(config=Game)
 class SHOOTER_API AShooterCharacter : public ACharacter
@@ -24,14 +25,6 @@ class SHOOTER_API AShooterCharacter : public ACharacter
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
 	USkeletalMeshComponent* Mesh1P;
-
-	/** Gun mesh: 1st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-	UStaticMeshComponent* FP_Pistol;
-
-	/** Gun mesh: 1st person view (seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-	UStaticMeshComponent* FP_Rifle;
 
 	/** Gun mesh: VR view (attached to the VR controller directly, no arm, just the actual gun) */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
@@ -56,10 +49,11 @@ class SHOOTER_API AShooterCharacter : public ACharacter
 public:
 	AShooterCharacter();
 
+protected:
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-protected:
+	
 	virtual void BeginPlay();
 
 public:
@@ -117,9 +111,12 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gameplay)
 	int playerHealth = 50;
 
-	int currentHealth;
+	int currentHealth = 50;
 
 	AMyHUD* MyHUD;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Waves)
+	AWavesManager* wavesManager;
 
 protected:
 
@@ -192,7 +189,7 @@ protected:
 	};
 	void BeginTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
 	void EndTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
-	TouchData	TouchItem;
+	TouchData TouchItem;
 	
 protected:
 	// APawn interface

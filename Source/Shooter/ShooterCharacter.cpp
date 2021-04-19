@@ -4,9 +4,10 @@
 #include "Enemy.h"
 #include "Weapon.h"
 #include "Pistol.h"
-#include "Containers/Array.h"
 #include "AssaultRifle.h"
+#include "Containers/Array.h"
 #include "MyHUD.h"
+#include "WavesManager.h"
 #include "Engine/EngineTypes.h"
 #include "GameFramework/Actor.h"
 #include "Animation/AnimInstance.h"
@@ -51,22 +52,6 @@ AShooterCharacter::AShooterCharacter()
 	Mesh1P->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
-	// Create a gun mesh component
-	FP_Pistol = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FP_Pistol"));
-	FP_Pistol->SetOnlyOwnerSee(false);			// otherwise won't be visible in the multiplayer
-	FP_Pistol->bCastDynamicShadow = false;
-	FP_Pistol->CastShadow = false;
-	// FP_Pistol->SetupAttachment(Mesh1P, TEXT("GripPoint"));
-	FP_Pistol->SetupAttachment(RootComponent);
-
-	// Create a gun mesh component
-	FP_Rifle = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FP_Rifle"));
-	FP_Rifle->SetOnlyOwnerSee(false);			// otherwise won't be visible in the multiplayer
-	FP_Rifle->bCastDynamicShadow = false;
-	FP_Rifle->CastShadow = false;
-	// FP_Rifle->SetupAttachment(Mesh1P, TEXT("GripPoint"));
-	FP_Rifle->SetupAttachment(RootComponent);
-
 	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
 	FP_MuzzleLocation->SetupAttachment(RootComponent);
 	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
@@ -107,12 +92,9 @@ void AShooterCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
-	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
-	FP_Pistol->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
-	FP_Rifle->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	FP_MuzzleLocation->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
 
-	FP_Pistol->SetHiddenInGame(false, true);
-	FP_Rifle->SetHiddenInGame(true, true);
+	wavesManager->LaunchNextWave();
 
 	// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
 	if (bUsingMotionControllers)
@@ -128,8 +110,17 @@ void AShooterCharacter::BeginPlay()
 	
 	currentHealth = playerHealth;
 
-	weaponsList.Emplace(GetWorld()->SpawnActor<APistol>(pistolWeapon, FVector(0, 0, 0), FRotator(0, 0, 0)));
-	weaponsList.Emplace(GetWorld()->SpawnActor<AAssaultRifle>(assaultRifleWeapon, FVector(0,0,0), FRotator(0,0,0)));
+	AWeapon* tempWeapon = GetWorld()->SpawnActor<APistol>(pistolWeapon, FVector(0, 0, 0), FRotator(0, 0, 0));
+	tempWeapon->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	tempWeapon->SetActorRelativeLocation(FVector(0,-4,-2));
+	weaponsList.Emplace(tempWeapon);
+
+	tempWeapon = GetWorld()->SpawnActor<AAssaultRifle>(assaultRifleWeapon, FVector(0, 0, 0), FRotator(0, 0, 0));
+	tempWeapon->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	tempWeapon->SetActorRelativeLocation(FVector(0, -4, -2));
+	weaponsList.Emplace(tempWeapon);
+
+	weaponsList[1]->SetActorHiddenInGame(true);
 	
 	MyHUD = Cast<AMyHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
 	UpdateHUD();
@@ -229,22 +220,21 @@ void AShooterCharacter::Shoot() {
 void AShooterCharacter::SwitchToPistol()
 {
 	if (!isReloading) {
+		weaponsList[currentWeapon]->SetActorHiddenInGame(true);
 		currentWeapon = 0;
-		FP_Rifle->SetHiddenInGame(true, true);
-		FP_Pistol->SetHiddenInGame(false, true);
+		weaponsList[currentWeapon]->SetActorHiddenInGame(false);
 		UpdateHUD();
-	}
-	
+	}	
 }
 
 void AShooterCharacter::SwitchToAR()
 {
 	if (!isReloading) {
+		weaponsList[currentWeapon]->SetActorHiddenInGame(true);
 		currentWeapon = 1;
-		FP_Pistol->SetHiddenInGame(true, true);
-		FP_Rifle->SetHiddenInGame(false, true);
+		weaponsList[currentWeapon]->SetActorHiddenInGame(false);
 		UpdateHUD();
-	}	
+	}
 }
 
 void AShooterCharacter::PrevWeapon() {
@@ -277,7 +267,7 @@ void AShooterCharacter::Reload()
 		isReloading = true;
 
 		if (MyHUD) {
-			MyHUD->toggleReloading();
+			MyHUD->ToggleReloading();
 		}
 
 		FTimerHandle UnusedHandle;
@@ -291,7 +281,7 @@ void AShooterCharacter::OnReload()
 	weaponsList[currentWeapon]->currentMagazineCapacity = weaponsList[currentWeapon]->magazineCapacity;
 	UpdateHUD();
 	if (MyHUD) {
-		MyHUD->toggleReloading();
+		MyHUD->ToggleReloading();
 	}
 	isReloading = false;
 }
@@ -336,8 +326,9 @@ void AShooterCharacter::CheckPlayerCollisions() {
 		{
 			AEnemy* enemy = Cast<AEnemy>(enemyActor);
 			if (enemy->CanAttack()) {
+				UE_LOG(LogTemp, Warning, TEXT("Health, %d"), currentHealth / playerHealth);
 				if (takeDamage(enemy->GetDamage())) {
-					UE_LOG(LogTemp, Warning, TEXT("Dead"));
+					UGameplayStatics::SetGamePaused(GetWorld(), true);
 				}
 			}
 		}
@@ -346,6 +337,9 @@ void AShooterCharacter::CheckPlayerCollisions() {
 
 bool AShooterCharacter::takeDamage(int amount) {
 	currentHealth -= amount;
+	if (MyHUD) {
+		MyHUD->UpdateHealthBar(currentHealth, playerHealth);
+	}
 	return currentHealth <= 0;
 }
 

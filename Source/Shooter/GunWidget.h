@@ -20,13 +20,18 @@ public:
 
 	virtual void NativeConstruct() override;
 
-	void UpdateMagazineWidget(int32 bulletsAmount, int32 capacity);
+	void UpdateMagazineWidget(int bulletsAmount, int capacity);
 
-	void toggleReloading();
+	void ToggleReloading();
+
+	void UpdateHealthBar(int currentHealth, int maxHealth);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UTextBlock* TXTMagazine;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* TXTReloading;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UProgressBar* PBHealthBar;
 };

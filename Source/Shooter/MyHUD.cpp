@@ -40,14 +40,20 @@ void AMyHUD::DrawHUD() {
 	Canvas->DrawItem(TileItem);
 }
 
-void AMyHUD::UpdateMagazineWidget(int32 bulletsAmount, int32 capacity) {
+void AMyHUD::UpdateMagazineWidget(int bulletsAmount, int capacity) {
 	if (GunWidget) {
 		GunWidget->UpdateMagazineWidget(bulletsAmount, capacity);
 	}
 }
 
-void AMyHUD::toggleReloading() {
+void AMyHUD::ToggleReloading() {
 	if (GunWidget) {
-		GunWidget->toggleReloading();
+		GunWidget->ToggleReloading();
+	}
+}
+
+void AMyHUD::UpdateHealthBar(int currentHealth, int maxHealth) {
+	if (GunWidget) {
+		GunWidget->UpdateHealthBar(currentHealth, maxHealth);
 	}
 }

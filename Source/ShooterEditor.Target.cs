@@ -10,5 +10,6 @@ public class ShooterEditorTarget : TargetRules
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
 		ExtraModuleNames.Add("Shooter");
+		bUseUnityBuild = false;
 	}
 }

@@ -27,7 +27,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	float attackDelay;
 
-	float lastShot = 0;
+	float lastAttack = 0;
 
 protected:
 	// Called when the game starts or when spawned

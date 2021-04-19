@@ -10,18 +10,22 @@ void UGunWidget::NativeConstruct() {
 	TXTReloading->SetVisibility(ESlateVisibility::Hidden);
 }
 
-void UGunWidget::UpdateMagazineWidget(int32 bulletsAmount, int32 capacity) {
+void UGunWidget::UpdateMagazineWidget(int bulletsAmount, int capacity) {
 	if(TXTMagazine->Visibility == ESlateVisibility::Hidden)
 		TXTMagazine->SetVisibility(ESlateVisibility::Visible);
 	
 	TXTMagazine->SetText(FText::FromString(FString::FromInt(bulletsAmount) + " / " + FString::FromInt(capacity)));
 }
 
-void UGunWidget::toggleReloading() {
+void UGunWidget::ToggleReloading() {
 	if (TXTReloading->Visibility == ESlateVisibility::Hidden) {
 		TXTReloading->SetVisibility(ESlateVisibility::Visible);
 	}
 	else if (TXTReloading->Visibility == ESlateVisibility::Visible) {
 		TXTReloading->SetVisibility(ESlateVisibility::Hidden);
 	}	
+}
+
+void UGunWidget::UpdateHealthBar(int currentHealth, int maxHealth) {
+	PBHealthBar->SetPercent(currentHealth / maxHealth);
 }

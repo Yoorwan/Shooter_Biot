@@ -26,10 +26,13 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
-	void UpdateMagazineWidget(int32 bulletsAmount, int32 capacity);
+	void UpdateMagazineWidget(int bulletsAmount, int capacity);
 
 	UFUNCTION()
-	void toggleReloading();
+	void ToggleReloading();
+
+	UFUNCTION()
+	void UpdateHealthBar(int currentHealth, int maxHealth);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
 	TSubclassOf<UUserWidget> GunWidgetClass;

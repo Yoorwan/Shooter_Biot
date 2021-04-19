@@ -23,8 +23,8 @@ void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	float directionX = Cast<AActor>(targetActor)->GetActorLocation().X - GetActorLocation().X;
-	float directionY = Cast<AActor>(targetActor)->GetActorLocation().Y - GetActorLocation().Y;
+	float directionX = targetActor->GetActorLocation().X - GetActorLocation().X;
+	float directionY = targetActor->GetActorLocation().Y - GetActorLocation().Y;
 	FVector direction(directionX, directionY, 0);
 	direction.Normalize();
 
@@ -37,8 +37,8 @@ bool AEnemy::takeDamage(int value) {
 }
 
 bool AEnemy::CanAttack() {
-	if (lastShot + attackDelay < GetGameTimeSinceCreation()) {
-		lastShot = GetGameTimeSinceCreation();
+	if (lastAttack + attackDelay < GetGameTimeSinceCreation()) {
+		lastAttack = GetGameTimeSinceCreation();
 		return true;
 	}
 	return false;
